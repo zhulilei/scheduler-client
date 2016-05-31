@@ -7,12 +7,16 @@ import (
 	"log"
 	"net/http"
 	"time"
+	"os"
 )
 
 func main() {
 
+	bind := fmt.Sprintf("%s:%s", os.Getenv("OPENSHIFT_GO_IP"), os.Getenv("OPENSHIFT_GO_PORT"))
+	fmt.Printf("listening on %s...", bind)
 	http.HandleFunc("/job", jobExecute)
-	err := http.ListenAndServe(":8010", nil)
+	http.HandleFunc("/", Index)
+	err := http.ListenAndServe(bind, nil)
 	if err != nil {
 		log.Fatalln(err)
 		return
@@ -40,7 +44,11 @@ func jobExecute(response http.ResponseWriter, request *http.Request) {
 	fmt.Println(request.Form)
 
 }
+func Index(response http.ResponseWriter, request *http.Request) {
 
+	response.Write([]byte("hello golang!"))
+
+}
 type JobResponse struct {
 	Success bool   `json:"success"`
 	Message string `json:"message"`
