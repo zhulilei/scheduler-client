@@ -7,16 +7,14 @@ import (
 	"log"
 	"net/http"
 	"time"
-	"os"
+	"math/rand"
 )
 
 func main() {
 
-	bind := fmt.Sprintf("%s:%s", os.Getenv("OPENSHIFT_GO_IP"), os.Getenv("OPENSHIFT_GO_PORT"))
-	fmt.Printf("listening on %s...", bind)
 	http.HandleFunc("/job", jobExecute)
 	http.HandleFunc("/", Index)
-	err := http.ListenAndServe(bind, nil)
+	err := http.ListenAndServe(":8010", nil)
 	if err != nil {
 		log.Fatalln(err)
 		return
@@ -25,7 +23,6 @@ func main() {
 
 func jobExecute(response http.ResponseWriter, request *http.Request) {
 	request.ParseForm()
-
 	body, err := ioutil.ReadAll(request.Body)
 	result := &JobResponse{}
 	if err != nil {
@@ -36,6 +33,12 @@ func jobExecute(response http.ResponseWriter, request *http.Request) {
 		result.Message = "执行成功"
 		time.Sleep(5 * time.Second)
 		result.Content = "执行成功"
+		if rand.Intn(3)%2 == 0 {
+			result.Status = "COMPLETED"
+		} else {
+			result.Status = "EXECUTING"
+		}
+
 	}
 
 	bd, err := json.Marshal(result)
@@ -53,4 +56,5 @@ type JobResponse struct {
 	Success bool   `json:"success"`
 	Message string `json:"message"`
 	Content string `json:"content"`
+	Status string `json:status`
 }
